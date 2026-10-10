@@ -15,7 +15,7 @@ version: '3.6'
 
 services:
   mcp:
-    image: fabreguesm/flx-mcp-memoria:0.1.1
+    image: fabreguesm/flx-mcp-memoria:0.1.2
     hostname: flx-mcp-memoria
     networks:
       - agentes
