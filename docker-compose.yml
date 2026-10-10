@@ -5,31 +5,25 @@
 # Este repo es solo el stack: lo que Portainer despliega.
 #
 # Sin estado propio: todo queda en la base (stack flx-agentes-db).
-# Sin dominio: publica un puerto en la red interna (http://<ip del swarm>:${PORT_PUBLICO}/mcp).
+# Sin puerto publicado ni tokens: lo usan los stacks conectados a la red "flx-agentes"
+# (el Asistente) con http://flx-mcp-memoria_mcp:8100/mcp. Para conectar Claude Code desde
+# afuera habria que publicar un puerto y cargar MEMORIA_TOKEN_LECTURA.
 #
-# Variables del stack: SERVICE_NAME, NODE, LOKI_URL, PORT_PUBLICO, PGHOST, PGPORT,
-# y los secretos PGPASSWORD (la de flx-agentes-db), MEMORIA_TOKEN y MEMORIA_TOKEN_LECTURA.
+# Variables del stack: SERVICE_NAME, NODE, LOKI_URL.
 # ---------------------------------------------------------------------------
 version: '3.6'
 
 services:
   mcp:
-    image: fabreguesm/flx-mcp-memoria:0.1.0
+    image: fabreguesm/flx-mcp-memoria:0.1.1
     hostname: flx-mcp-memoria
-    ports:
-      - target: 8100
-        published: ${PORT_PUBLICO}
-        protocol: tcp
-        mode: ingress
+    networks:
+      - agentes
     environment:
       - TZ=America/Argentina/Buenos_Aires
-      - PGHOST=${PGHOST}
-      - PGPORT=${PGPORT}
+      - PGHOST=flx-agentes-db_postgres
       - PGUSER=flx_agentes
       - PGDATABASE=flx_agentes
-      - PGPASSWORD=${PGPASSWORD}
-      - MEMORIA_TOKEN=${MEMORIA_TOKEN}
-      - MEMORIA_TOKEN_LECTURA=${MEMORIA_TOKEN_LECTURA}
     deploy:
       placement:
         constraints: ["${NODE}"]
@@ -40,3 +34,8 @@ services:
       driver: loki
       options:
         loki-url: ${LOKI_URL}
+
+networks:
+  agentes:
+    external: true
+    name: flx-agentes
