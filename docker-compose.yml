@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# flx-mcp-memoria: memoria compartida de los agentes de Flexxus (servidor MCP)
+#
+# Codigo e imagen: bitbucket.org/flexxus_id/flx-mcp-memoria
+# Este repo es solo el stack: lo que Portainer despliega.
+#
+# Sin estado propio: todo queda en la base (stack flx-agentes-db).
+# Sin dominio: publica un puerto en la red interna (http://<ip del swarm>:${PORT_PUBLICO}/mcp).
+#
+# Variables del stack: SERVICE_NAME, NODE, LOKI_URL, PORT_PUBLICO, PGHOST, PGPORT,
+# y los secretos PGPASSWORD (la de flx-agentes-db), MEMORIA_TOKEN y MEMORIA_TOKEN_LECTURA.
+# ---------------------------------------------------------------------------
+version: '3.6'
+
+services:
+  mcp:
+    image: fabreguesm/flx-mcp-memoria:0.1.0
+    hostname: flx-mcp-memoria
+    ports:
+      - target: 8100
+        published: ${PORT_PUBLICO}
+        protocol: tcp
+        mode: ingress
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - PGHOST=${PGHOST}
+      - PGPORT=${PGPORT}
+      - PGUSER=flx_agentes
+      - PGDATABASE=flx_agentes
+      - PGPASSWORD=${PGPASSWORD}
+      - MEMORIA_TOKEN=${MEMORIA_TOKEN}
+      - MEMORIA_TOKEN_LECTURA=${MEMORIA_TOKEN_LECTURA}
+    deploy:
+      placement:
+        constraints: ["${NODE}"]
+      restart_policy:
+        condition: any
+        delay: 10s
+    logging:
+      driver: loki
+      options:
+        loki-url: ${LOKI_URL}
